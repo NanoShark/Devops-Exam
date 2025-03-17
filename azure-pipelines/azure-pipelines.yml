@@ -1,0 +1,107 @@
+trigger:
+  branches:
+    include:
+      - dev  
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - group: docker-credentials  
+  # variable group in Azure DevOps with DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD
+  - name: IMAGE_NAME
+    value: 'nanosharkdevops/flask-aws-azure'  
+  - name: DOCKER_TAG
+    value: 'latest'
+
+stages:
+- stage: Build
+  displayName: 'Build and Test'
+  jobs:
+  - job: BuildAndTest
+    displayName: 'Build, Lint, Scan and Push'
+    steps:
+    - checkout: self  # Clone the repository
+      displayName: 'Clone Repository'
+      
+    # Parallel tasks are implemented using multiple steps within the same job
+    # Linting steps
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.9'
+      displayName: 'Setup Python'
+    
+    - script: |
+        pip install flake8
+        flake8 app/*.py --count --select=E9,F63,F7,F82 --show-source --statistics
+      displayName: 'Python Linting'
+      continueOnError: true  # Matching Jenkins behavior
+    
+    - script: |
+        pip install shellcheck-py
+        shellcheck-py docker/*.sh || true
+      displayName: 'Shell Script Linting'
+      continueOnError: true  # Matching Jenkins behavior
+    
+    - script: |
+        curl -L -o $(Agent.TempDirectory)/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
+        chmod +x $(Agent.TempDirectory)/hadolint
+        $(Agent.TempDirectory)/hadolint docker/Dockerfile || true
+      displayName: 'Dockerfile Linting'
+      continueOnError: true  # Matching Jenkins behavior
+    
+    # Security scanning steps
+    - script: |
+        pip install bandit
+        bandit -r app/ -f json -o $(Build.ArtifactStagingDirectory)/bandit-results.json || true
+      displayName: 'Python Security Scanning'
+      continueOnError: true  # Matching Jenkins behavior
+    
+    - script: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b $(Agent.TempDirectory)
+        $(Agent.TempDirectory)/trivy fs --security-checks vuln,config --severity HIGH,CRITICAL . || true
+      displayName: 'Container Security Scanning'
+      continueOnError: true  # Matching Jenkins behavior
+    
+    # Publish security scan results as artifacts
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: 'SecurityScanResults'
+      displayName: 'Publish Security Scan Results'
+      condition: succeededOrFailed()
+
+   
+    - task: Docker@2
+      displayName: 'Build Docker Image'
+      inputs:
+        command: build
+        repository: $(IMAGE_NAME)
+        dockerfile: docker/Dockerfile
+        tags: |
+          $(DOCKER_TAG)
+          latest
+
+    # Push to Docker Hub
+    - task: Docker@2
+      displayName: 'Push Docker Images'
+      inputs:
+        command: login
+        containerRegistry: 'dockerhub-connection'  # Create this service connection in Azure DevOps
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    
+    - task: Docker@2
+      displayName: 'Push Tagged Image'
+      inputs:
+        command: push
+        repository: $(IMAGE_NAME)
+        tags: $(DOCKER_TAG)
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    
+    - task: Docker@2
+      displayName: 'Push Latest Image'
+      inputs:
+        command: push
+        repository: $(IMAGE_NAME)
+        tags: latest
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
