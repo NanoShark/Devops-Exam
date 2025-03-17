@@ -29,7 +29,7 @@ __pycache__/
 docker/*.tar
 
 
- Ignore Jenkins volumes
+#Ignore Jenkins volumes
 jenkins_home/
 jenkins/secrets/
 jenkins/workspace/
