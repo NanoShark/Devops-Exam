@@ -84,4 +84,5 @@ To initialize and apply the Terraform configuration, navigate to the `terraform/
 terraform init
 terraform apply
 ```
-
+### Helm 
+Didnt had time so so sorry 
