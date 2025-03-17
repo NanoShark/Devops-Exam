@@ -73,4 +73,4 @@ resource "aws_instance" "builder" {
 }
 
 # connect to the instance
-# ssh -i ./michael-builder-key.pem ubuntu@44.204.165.207
+# 

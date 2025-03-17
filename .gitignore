@@ -20,3 +20,10 @@ LICENSE.txt
 terraform_outputs.json
 
 michael-builder-key.pem
+
+
+venv/
+__pycache__/
+
+# Ignore Docker artifacts
+docker/*.tar
