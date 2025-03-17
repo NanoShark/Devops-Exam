@@ -24,9 +24,13 @@ pipeline {
                         sh 'flake8 app/*.py --count --select=E9,F63,F7,F82 --show-source --statistics'
                         sh 'pip install shellcheck-py'
                         sh 'shellcheck-py docker/*.sh || true'
-                        sh 'pip install hadolint-python'
+                       
+                        sh '''
+                            curl -L -o /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
+                            chmod +x /usr/local/bin/hadolint
+                        '''
                         sh 'hadolint docker/Dockerfile || true'
-                    }
+                                    }
                 }
                 
                 stage('Security Scan') {
