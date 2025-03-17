@@ -33,6 +33,10 @@ def home():
            })
   
    # Fetch VPCs
+   vpc_data = []
+   lb_data = []
+   ami_data = []
+
    try:
        vpcs = ec2_client.describe_vpcs()
        vpc_data = [{"VPC ID": vpc["VpcId"], "CIDR": vpc["CidrBlock"]} for vpc in vpcs.get("Vpcs", [])]
