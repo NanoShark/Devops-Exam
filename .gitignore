@@ -1,0 +1,40 @@
+# Ignore Terraform state files
+terraform/*.tfstate
+terraform/*.tfstate.backup
+
+# Ignore Terraform crash logs
+terraform/crash.log
+terraform/.terraform.lock.hcl
+
+# Ignore Terraform working directory
+terraform/.terraform/
+
+# Ignore personal Terraform variables (if any)
+terraform/*.auto.tfvars
+terraform/*.tfvars
+
+LICENSE.txt
+
+.env
+
+terraform_outputs.json
+
+michael-builder-key.pem
+
+
+venv/
+__pycache__/
+
+# Ignore Docker artifacts
+docker/*.tar
+
+
+#Ignore Jenkins volumes
+jenkins_home/
+jenkins/secrets/
+jenkins/workspace/
+jenkins/logs/
+jenkins/jobs/
+
+# Ignore mounted volumes
+volume/
