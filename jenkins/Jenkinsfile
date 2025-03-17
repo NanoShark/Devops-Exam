@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         DOCKERHUB_USERNAME = credentials('d55dd9f1-fb6b-415f-903b-bc92183c3799')
-        DOCKERHUB_PASSWORD = credentials('dockerhub-password-id')
+        DOCKERHUB_PASSWORD = credentials('d55dd9f1-fb6b-415f-903b-bc92183c3799')
         IMAGE_NAME = 'nanosharkdevops/flask-aws'
         DOCKER_IMAGE = 'nanosharkdevops/flask-aws'
         DOCKER_TAG = 'latest'
