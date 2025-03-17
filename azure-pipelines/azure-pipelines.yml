@@ -8,9 +8,8 @@ pool:
 
 variables:
   - group: docker-credentials  
-  # variable group in Azure DevOps with DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD
   - name: IMAGE_NAME
-    value: 'nanosharkdevops/flask-aws-azure'  
+    value: 'nanosharkdevops/flask-aws'  
   - name: DOCKER_TAG
     value: 'latest'
 
@@ -87,7 +86,7 @@ stages:
       displayName: 'Push Docker Images'
       inputs:
         command: login
-        containerRegistry: 'dockerhub-connection'  # Create this service connection in Azure DevOps
+        containerRegistry: 'dockerhub-connection'  
       condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     
     - task: Docker@2
