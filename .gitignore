@@ -27,3 +27,14 @@ __pycache__/
 
 # Ignore Docker artifacts
 docker/*.tar
+
+
+ Ignore Jenkins volumes
+jenkins_home/
+jenkins/secrets/
+jenkins/workspace/
+jenkins/logs/
+jenkins/jobs/
+
+# Ignore mounted volumes
+volume/

@@ -1,0 +1,72 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKERHUB_USERNAME = credentials('d55dd9f1-fb6b-415f-903b-bc92183c3799')
+        DOCKERHUB_PASSWORD = credentials('dockerhub-password-id')
+        IMAGE_NAME = 'nanosharkdevops/flask-aws'
+        DOCKER_IMAGE = 'nanosharkdevops/flask-aws'
+    }
+    
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/NanoShark/devops-exam.git'
+            }
+        }
+        
+        stage('Parallel Checks') {
+            parallel {
+                stage('Linting') {
+                    steps {
+                        sh 'pip install flake8'
+                        sh 'flake8 app/*.py --count --select=E9,F63,F7,F82 --show-source --statistics'
+                        sh 'pip install shellcheck-py'
+                        sh 'shellcheck-py docker/*.sh || true'
+                        sh 'pip install hadolint-python'
+                        sh 'hadolint docker/Dockerfile || true'
+                    }
+                }
+                
+                stage('Security Scan') {
+                    steps {
+                       sh 'pip install bandit'
+                        sh 'bandit -r app/ -f json -o bandit-results.json || true'
+                        
+                        // Install and run Trivy for Docker image scanning
+                        sh '''
+                            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+                            trivy fs --security-checks vuln,config --severity HIGH,CRITICAL . || true
+                        '''
+                    }
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -f docker/Dockerfile .'
+                sh 'docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest'
+            }
+        }
+        
+        stage('Push to Docker Hub') {
+                withDockerRegistry([credentialsId: 'dockerhub-password-id', url: 'https://index.docker.io/v1/']) {
+                withDockerRegistry([credentialsId: 'd55dd9f1-fb6b-415f-903b-bc92183c3799', url: 'https://index.docker.io/v1/']) {
+                    sh 'docker push ${IMAGE_NAME}:${DOCKER_TAG}'
+                    sh 'docker push ${IMAGE_NAME}:latest'
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Pipeline complete! '
+        }
+        failure {
+            echo 'Pipeline failed XXXXX'
+        }
+    }
+}
+        
