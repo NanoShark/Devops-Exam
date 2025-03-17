@@ -1,0 +1,22 @@
+# Ignore Terraform state files
+terraform/*.tfstate
+terraform/*.tfstate.backup
+
+# Ignore Terraform crash logs
+terraform/crash.log
+terraform/.terraform.lock.hcl
+
+# Ignore Terraform working directory
+terraform/.terraform/
+
+# Ignore personal Terraform variables (if any)
+terraform/*.auto.tfvars
+terraform/*.tfvars
+
+LICENSE.txt
+
+.env
+
+terraform_outputs.json
+
+builder-key.pem
